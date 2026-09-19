@@ -32,15 +32,34 @@ iOS 上它会存到「文件」而非相册（`navigator.share` 需要 HTTPS，�
 
 ## 环境要求
 
-- **macOS**（依赖系统自带的 Vision 框架做人脸关键点和兜底分割，**不能跨平台**）
+- **macOS**（依赖系统自带的 Vision 框架做人脸关键点，**不能跨平台**）
 - Python 3.11+
 - Xcode 命令行工具（`swiftc`）
 
-模型国内下载慢时可用镜像，脚本默认就是优先走镜像：
+## 模型
 
-```bash
-HF_ENDPOINT=https://hf-mirror.com python3 scripts/fetch_models.py
-```
+抠图用两个模型，**不在仓库里**（BiRefNet 单个 928 MB，超过 GitHub 的 100 MB
+单文件上限），首次运行自动下载：
+
+| 文件 | 大小 | 用途 | 对应档位 | 许可 |
+|---|---|---|---|---|
+| `birefnet.onnx` | 928 MB | BiRefNet，细碎飞发保留完整 | 高精度（约 31 秒） | **MIT** |
+| `rmbg14.onnx` | 168 MB | RMBG-1.4，快 | 标准（约 9 秒） | **仅限非商用** |
+
+来自 HuggingFace（国内走 `hf-mirror.com` 镜像，脚本默认优先走）。**不要走 GitHub
+Release** —— 实测在部分网络下不通。手动下载与部署方式见
+[`vendor/models/README.md`](vendor/models/README.md)。
+
+> ⚠️ **商用注意**：`rmbg14.onnx` 是 BRIA 的 source-available 模型，**仅限非商用**。
+> 要商用就不要下它，只留 `birefnet.onnx`（MIT，无限制）—— 页面上的「标准」档会
+> 自动消失，不影响使用。
+>
+> ```bash
+> rm vendor/models/rmbg14.onnx     # 不需要改代码
+> ```
+
+两个模型都缺失时会退回 macOS Vision 的系统分割：仍能出图，边缘质量下降，
+结果里会带一条提示。判断逻辑在 `idphoto/matting.py:available()`。
 
 ## 规格与底色
 
@@ -113,7 +132,7 @@ results, warnings = pipeline.process(
 `.claude/skills/id-photo-retouch/SKILL.md`）：
 
 **抠图必须用模型，启发式修不了内部误判。** 最初用 Vision 语义分割 + 两色关系
-`a=(C−B)/(F−B)` 做启发式修边。它在轮廓边界有效，但**实心区是不生效的**，所以当分割
+`a=(C−B)/(F−B)` 做启发式修边。它在轮廓边界有效，**实心区却完全不生效**，所以当分割
 把一块背景误判进轮廓内部时，下游没有任何环节能纠正它 —— 实测那张参考照片有 8.5 万
 像素如此，最大一块 2.9 万像素。换学习型 matting 模型后直接消失。
 
@@ -138,7 +157,7 @@ results, warnings = pipeline.process(
 - 仅 macOS
 - 单张照片、单人正面；侧脸、多人、无脸会返回中文提示
 - 去痣功能**故意没有做**：痣属于身份特征，抹掉会降低与学籍档案、身份证的比对一致性
-- `vendor/models/` 占 1.1 GB。只想跑「标准」档的话可以删掉 `birefnet.onnx`
+- `vendor/models/` 占 1.1 GB；删减方式见上方「模型」一节（注意 RMBG-1.4 仅限非商用）
 
 ## 许可
 

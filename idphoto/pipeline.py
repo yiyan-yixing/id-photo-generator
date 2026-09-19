@@ -396,7 +396,7 @@ def _encode_jpeg(im: Image.Image, dpi: int, max_kb: int | None) -> bytes:
 
 def process(raw: bytes, workdir: Path, *, size_keys=None, color_keys=None,
             do_retouch: bool = True, max_kb: int | None = None,
-            matting_tiles: int = 2, matting_backend: str = matting.DEFAULT_BACKEND,
+            matting_tiles: int = 2, matting_backend: str | None = None,
             params: RetouchParams | None = None,
             supersample: float = 1.5,
             max_work_pixels: int = 18_000_000) -> tuple[list[dict], list[str]]:
@@ -421,7 +421,10 @@ def process(raw: bytes, workdir: Path, *, size_keys=None, color_keys=None,
     # segmentation is kept as the fallback, but it mislabels interior background
     # as subject and no amount of edge work downstream can repair that -- see
     # matting.py for the measurement.
-    if matting.available(matting_backend):
+    if matting_backend is None:
+        matting_backend = next(
+            (b for b in ("birefnet", "rmbg") if matting.available(b)), None)
+    if matting_backend and matting.available(matting_backend):
         alpha = matting.predict(rgb, tiles=matting_tiles, backend=matting_backend)
         backend = "rmbg"
     else:

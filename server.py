@@ -16,7 +16,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from idphoto import pipeline, vision
+from idphoto import matting, pipeline, vision
 from idphoto.specs import COLORS, DEFAULT_COLORS, DEFAULT_SIZES, SIZES
 
 # Anything the user can act on comes back as 422 with a readable message;
@@ -50,6 +50,22 @@ def _sweep_jobs() -> None:
             pass
 
 
+def _resolve_backend(quality: str | None) -> str | None:
+    """Map the requested tier to a backend, falling back to any that is present.
+
+    The page only offers tiers whose model is downloaded, but a stale client or a
+    direct API call can still ask for one that is not there.
+    """
+    by_key = {k: backend for k, _, _, backend in QUALITY_TIERS}
+    wanted = by_key.get(quality) if quality else None
+    if wanted and matting.available(wanted):
+        return wanted
+    for _, _, _, backend in reversed(QUALITY_TIERS):      # prefer the best present
+        if matting.available(backend):
+            return backend
+    return None
+
+
 def _parse_keys(raw: str | None, valid: dict, default: list[str]) -> list[str]:
     if not raw:
         return default
@@ -62,9 +78,19 @@ def index() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 
+# Ordered weakest-to-strongest; the last available one becomes the default.
+QUALITY_TIERS = [
+    ("fast", "标准（快）", "约 9 秒", "rmbg"),
+    ("high", "高精度（慢）", "约 31 秒", "birefnet"),
+]
+
+
 @app.get("/api/specs")
 def specs() -> dict:
     """Expose the presets so the page does not duplicate them."""
+    qualities = [{"key": k, "label": label, "secs": secs}
+                 for k, label, secs, backend in QUALITY_TIERS
+                 if matting.available(backend)]
     return {
         "sizes": [{"key": s.key, "label": s.label, "w": s.w, "h": s.h,
                    "default": s.key in DEFAULT_SIZES}
@@ -80,9 +106,10 @@ def specs() -> dict:
         "default_max_kb": 0,
         # Two matting models: the stronger one is ~3x slower but keeps far more
         # fine hair. Both are measured; the trade-off is the user's to make.
-        "quality": [{"key": "fast", "label": "标准（快）", "secs": "约 9 秒"},
-                    {"key": "high", "label": "高精度（慢）", "secs": "约 31 秒"}],
-        "default_quality": "high",
+        # Only offer what is actually on disk -- the models are a separate
+        # download and RMBG-1.4 in particular may be withheld for licensing.
+        "quality": qualities,
+        "default_quality": qualities[-1]["key"] if qualities else None,
     }
 
 
@@ -98,7 +125,7 @@ def process(
     colors: str | None = Form(None),
     retouch: bool = Form(True),
     max_kb: int | None = Form(None),
-    quality: str = Form('high'),
+    quality: str = Form(None),
 ) -> JSONResponse:
     raw = photo.file.read()
     if not raw:
@@ -120,7 +147,7 @@ def process(
                 raw, workdir,
                 size_keys=size_keys, color_keys=color_keys,
                 do_retouch=retouch, max_kb=max_kb,
-                matting_backend=('birefnet' if quality == 'high' else 'rmbg'),
+                matting_backend=_resolve_backend(quality),
             )
     except USER_ERRORS as exc:
         shutil.rmtree(workdir, ignore_errors=True)
