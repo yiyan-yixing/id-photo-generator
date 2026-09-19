@@ -1,0 +1,26 @@
+# Models: 1.1 GB combined, past GitHub's 100 MB per-file limit.
+# Fetch with scripts/fetch_models.py
+vendor/models/*.onnx
+vendor/models/*.part
+
+# Compiled Swift helpers, built from the committed .swift sources by run.sh
+vendor/tools/segment
+vendor/tools/facebox
+
+# Generated results (auto-swept after an hour at runtime)
+jobs/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# User photos stay local -- this tool is meant to run on your own pictures
+samples/
+*.jpg
+*.jpeg
+*.png
+!static/**
+!docs/**
+
+.DS_Store

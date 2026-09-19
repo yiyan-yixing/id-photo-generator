@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>证件照生成器</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>证件照生成器</h1>
+  <p class="sub">照片只在这台电脑上处理，不会上传到任何服务器</p>
+</header>
+
+<main>
+
+  <!-- 1. pick a photo -->
+  <section id="step-pick" class="card">
+    <label class="picker" for="file">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1zm8 3a4 4 0 100 8 4 4 0 000-8z"/></svg>
+      <span class="picker-title">选择照片</span>
+      <span class="picker-hint">从相册选择，或直接拍一张</span>
+    </label>
+    <input id="file" type="file" accept="image/*" hidden>
+    <p class="tip">正面免冠、光线均匀、背景尽量简单的单人照效果最好</p>
+  </section>
+
+  <!-- 2. options -->
+  <section id="step-options" class="card hidden">
+    <div class="preview-row">
+      <img id="preview" alt="预览">
+      <button id="reselect" class="link-btn" type="button">换一张</button>
+    </div>
+
+    <h2>底色</h2>
+    <div id="colors" class="chips"></div>
+
+    <h2>规格</h2>
+    <div id="sizes" class="chips"></div>
+
+    <h2>文件大小</h2>
+    <div id="maxkb" class="chips"></div>
+
+    <h2>抠图精度</h2>
+    <div id="quality" class="chips"></div>
+
+    <h2>修图</h2>
+    <label class="switch">
+      <input id="opt-retouch" type="checkbox" checked>
+      <span>精修<em>磨皮、美白、提亮眼下</em></span>
+    </label>
+
+    <button id="go" class="primary" type="button">生成证件照</button>
+    <p id="error" class="error hidden"></p>
+  </section>
+
+  <!-- 3. results -->
+  <section id="step-results" class="card hidden">
+    <div class="results-head">
+      <h2>生成完成</h2>
+      <button id="again" class="link-btn" type="button">重新生成</button>
+    </div>
+    <p class="tip">点开大图后<b>长按图片</b>即可保存到相册</p>
+
+    <div class="compare">
+      <h3>原图对比</h3>
+      <div class="compare-row">
+        <figure>
+          <button class="plain" type="button" id="open-original">
+            <img id="original-img" alt="原图">
+          </button>
+          <figcaption>原图</figcaption>
+        </figure>
+        <figure>
+          <button class="plain" type="button" id="open-result">
+            <img id="compare-img" alt="成品">
+          </button>
+          <figcaption id="compare-cap">成品</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div id="results"></div>
+  </section>
+
+</main>
+
+<!-- full-screen viewer -->
+<div id="viewer" class="viewer hidden">
+  <div class="viewer-bar">
+    <span id="viewer-label"></span>
+    <button id="viewer-close" class="close" type="button" aria-label="关闭">&times;</button>
+  </div>
+  <div class="viewer-body"><img id="viewer-img" alt=""></div>
+  <div class="viewer-foot">
+    <p class="viewer-hint">长按图片 → 存储到照片</p>
+    <div class="viewer-actions">
+      <button id="viewer-toggle" class="ghost" type="button" hidden>看原图</button>
+      <a id="viewer-download" class="ghost" download>下载到文件</a>
+    </div>
+  </div>
+</div>
+
+<div id="busy" class="busy hidden"><div class="spinner"></div><p>正在处理，约 3 秒…</p></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

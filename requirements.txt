@@ -1,0 +1,10 @@
+# macOS only: the subject cut-out and the face landmarks come from the system
+# Vision framework via two small Swift helpers (see vendor/tools), so there is
+# no cross-platform build of this tool.
+fastapi>=0.115
+uvicorn>=0.30
+python-multipart>=0.0.9      # multipart uploads for the web form
+Pillow>=10.0                 # JPEG encode, EXIF handling
+numpy>=1.26
+opencv-python>=4.9           # colour work, filters, inpainting
+onnxruntime>=1.17            # runs the matting models
