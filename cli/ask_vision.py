@@ -5,7 +5,7 @@ Used as an independent pair of eyes on the ID-photo output: the sub-agents in
 this environment cannot render images, so a real local vision model is the only
 way to get a second opinion that is actually looking at the picture.
 
-    python3 tools/ask_vision.py "问题" a.png b.jpg ...
+    python3 cli/ask_vision.py "问题" a.png b.jpg ...
 
 Shells out to curl rather than using urllib: in this environment urllib's POSTs
 to 127.0.0.1 come back 502 while curl reaches the same endpoint fine, so the

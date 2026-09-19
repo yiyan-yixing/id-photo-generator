@@ -1,4 +1,4 @@
-"""Shared access to the Vision helpers for the standalone scripts in tools/.
+"""Shared access to the Vision helpers for the standalone scripts in cli/.
 
 The landmark parsing lives in the `idphoto` package so there is exactly one
 copy of it. It used to be duplicated here and a transposed min/max pair in the

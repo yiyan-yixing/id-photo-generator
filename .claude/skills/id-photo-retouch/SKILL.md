@@ -1,6 +1,6 @@
 ---
 name: id-photo-retouch
-description: 制作和精修证件照（白/蓝/红底、各标准规格），或排查"抠图感"、"发丝发白"、肤色过白不自然、头发被洗灰等效果问题。适用于用 idphoto 服务、tools/ 脚本，或任何"换底色/抠图/磨皮美白"的人像处理任务。包含实测验证过的失败模式与量化验收方法。
+description: 制作和精修证件照（白/蓝/红底、各标准规格），或排查"抠图感"、"发丝发白"、肤色过白不自然、头发被洗灰等效果问题。适用于用 idphoto 服务、cli/ 脚本，或任何"换底色/抠图/磨皮美白"的人像处理任务。包含实测验证过的失败模式与量化验收方法。
 ---
 
 # 证件照精修
@@ -459,13 +459,13 @@ a = (C - B) / (F - B)
 
 ## 相关位置
 
-- `idphoto/` — 本地服务（FastAPI + macOS Vision），`./run.sh` 启动
-- `tools/make_id_photo.py`、`tools/retouch.py` — 命令行，参数更全，适合调参
-- `idphoto/idphoto/matte.py` — 蒙版精修
-- `idphoto/idphoto/retouch.py` — 磨皮美白
-- `idphoto/idphoto/pipeline.py` — 编排与自检
+- `server.py` + `idphoto/` — 本地服务（FastAPI + macOS Vision），`./run.sh` 启动
+- `cli/make_id_photo.py`、`cli/retouch.py` — 命令行，参数更全，适合调参
+- `idphoto/matte.py` — 蒙版精修
+- `idphoto/retouch.py` — 磨皮美白
+- `idphoto/pipeline.py` — 编排与自检
 
-算法要改就改 `idphoto/` 包；`tools/` 通过 `_vision.py` 复用同一份，**不要复制**。
+算法要改就改 `idphoto/` 包；`cli/` 通过 `_vision.py` 这个路径 shim 复用同一份，**不要复制**。
 
 ## 专业做法调研来源
 
